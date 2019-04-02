@@ -2,11 +2,15 @@ package com.cherry.jeeves.utils;
 
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -23,11 +27,23 @@ public class QRCodeUtils {
         return qrCodeResult.getText();
     }
 
-    public static String generateQR(String text, int width, int height) throws WriterException {
+    public static String generateQR(String text, int width, int height) throws WriterException,IOException {
         Map<EncodeHintType, Object> params = new HashMap<>();
         params.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.L);
         params.put(EncodeHintType.CHARACTER_SET, StandardCharsets.UTF_8);
         BitMatrix bitMatrix = new MultiFormatWriter().encode(text, BarcodeFormat.QR_CODE, width, height, params);
+
+
+        String targetPath = "D:\\test.png"; //不解释
+        File target = new File(targetPath);
+        if(!target.exists()){
+            target.mkdirs();
+        }
+
+        BufferedImage bi = MatrixToImageWriter.toBufferedImage(bitMatrix);
+        bi = zoomInImage(bi,200,200);//根据size放大、缩小生成的二维码
+        ImageIO.write(bi, "png", target); //生成二维码图片
+
         return toAscii(bitMatrix);
     }
 
@@ -45,4 +61,15 @@ public class QRCodeUtils {
         }
         return builder.toString();
     }
+
+    /**
+     * 图片放大缩小
+    */
+    public static BufferedImage zoomInImage(BufferedImage originalImage, int width, int height){
+    BufferedImage newImage = new BufferedImage(width,height,originalImage.getType());
+    Graphics g = newImage.getGraphics();
+    g.drawImage(originalImage, 0,0,width,height,null);g.dispose();
+    return newImage;
+    }
+
 }

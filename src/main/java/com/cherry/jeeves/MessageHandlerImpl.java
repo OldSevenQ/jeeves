@@ -7,15 +7,21 @@ import com.cherry.jeeves.utils.MessageUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.apache.commons.text.StringEscapeUtils;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Random;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Component
@@ -48,17 +54,32 @@ public class MessageHandlerImpl implements MessageHandler {
         logger.info("to: " + message.getToUserName());
         logger.info("content:" + message.getContent());
 //        将原文回复给对方
-        replyMessage(message);
+//        replyMessage(message);
     }
 
     @Override
     public void onReceivingPrivateImageMessage(Message message, String thumbImageUrl, String fullImageUrl) throws IOException {
         logger.info("onReceivingPrivateImageMessage");
+        logger.info("from: " + message.getFromUserName());
+        logger.info("to: " + message.getToUserName());
         logger.info("thumbImageUrl:" + thumbImageUrl);
         logger.info("fullImageUrl:" + fullImageUrl);
 //        将图片保存在本地
-        byte[] data = wechatHttpService.downloadImage(thumbImageUrl);
-        FileOutputStream fos = new FileOutputStream("thumb.jpg");
+        byte[] data = wechatHttpService.downloadImage(fullImageUrl);
+
+//        String newFileName = generateNewFileName(name);
+        String randomStr = new Random().nextInt(10) + UUID.randomUUID().toString().substring(0, 4);// 随机数+UUID的前4位
+        String timeStr = new SimpleDateFormat("yyyyMMddHH24mmss").format(new Date());// 时间字符串
+        String fileName = timeStr+randomStr+".jpg";
+        String datePath = new SimpleDateFormat("yyyy"+ File.separator +"MM"+ File.separator +"dd").format(new Date());
+        datePath = File.separator+"attach"+File.separator+datePath+File.separator;
+        File basePath = new File(datePath);
+        if (!basePath.exists()){
+            basePath.mkdirs();
+        }
+
+        File talkAttach = new File(basePath+fileName);
+        FileOutputStream fos = new FileOutputStream(talkAttach);
         fos.write(data);
         fos.close();
     }

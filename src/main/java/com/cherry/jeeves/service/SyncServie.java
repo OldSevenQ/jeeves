@@ -131,8 +131,10 @@ public class SyncServie {
                 else if (isMessageFromChatRoom(message)) {
                     messageHandler.onReceivingChatRoomTextMessage(message);
                 }
-                //图片
-            } else if (message.getMsgType() == MessageType.IMAGE.getCode()) {
+            }
+
+            //图片
+            else if (message.getMsgType() == MessageType.IMAGE.getCode()) {
                 cacheService.getContactNamesWithUnreadMessage().add(message.getFromUserName());
                 String fullImageUrl = String.format(WECHAT_URL_GET_MSG_IMG, cacheService.getHostUrl(), message.getMsgId(), cacheService.getsKey());
                 String thumbImageUrl = fullImageUrl + "&type=slave";
@@ -145,6 +147,7 @@ public class SyncServie {
                     messageHandler.onReceivingChatRoomImageMessage(message, thumbImageUrl, fullImageUrl);
                 }
             }
+
             //系统消息
             else if (message.getMsgType() == MessageType.SYS.getCode()) {
                 //红包
@@ -166,6 +169,7 @@ public class SyncServie {
                     }
                 }
             }
+
             //好友邀请
             else if (message.getMsgType() == MessageType.VERIFYMSG.getCode() && cacheService.getOwner().getUserName().equals(message.getToUserName())) {
                 if (messageHandler.onReceivingFriendInvitation(message.getRecommendInfo())) {
@@ -178,6 +182,18 @@ public class SyncServie {
                 }
             }
 
+            //文件消息
+            else if (message.getMsgType() == MessageType.MEDIA.getCode()) {
+                cacheService.getContactNamesWithUnreadMessage().add(message.getFromUserName());
+                //个人
+                if (isMessageFromIndividual(message)) {
+                    messageHandler.onReceivingPrivateTextMessage(message);
+                }
+                //群
+                else if (isMessageFromChatRoom(message)) {
+                    messageHandler.onReceivingChatRoomTextMessage(message);
+                }
+            }
         }
     }
 
